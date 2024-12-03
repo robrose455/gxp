@@ -6,7 +6,7 @@ import { MatchPreview } from './types';
 
 function App() {
 
-  const [activeMatch, setActiveMatch] = useState<MatchPreview>(() => JSON.parse(localStorage.getItem('activeMatch') as string) || '');
+  const [activeMatch, setActiveMatch] = useState<MatchPreview>(() => JSON.parse(localStorage.getItem('activeMatch') as string) || "");
   const [accountId, setAccountId] = useState<string>(() => localStorage.getItem('accountId') || '');
   const [accountDisplay, setAccountDisplay] = useState<string>("");
   const [matchPreviews, setMatchPreviews] = useState<MatchPreview[]>(() => JSON.parse(localStorage.getItem('matchPreviews') as string) as MatchPreview[] || []);
