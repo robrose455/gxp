@@ -1,184 +1,215 @@
-import React, { useEffect, useState } from 'react'
-import MatchContext from '../Components/MatchContext';
-import TimelineGraph from '../Components/TimelineGraph';
-import Timeline from '../Components/Timeline';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import ChampionImage from '../Components/ChampionImage/ChampionImage';
+import MatchContext from '../Components/MatchContext/MatchContext';
+import TimelineGraph from '../Components/TimelineGraph/TimelineGraph';
+import { Metric, Mode } from '../constants';
 import { getMatchData } from '../riot.api';
+import { MatchData, Event, Data, MatchPreview, ActivePlayer, MetricData } from '../types';
 import './MatchDashboard.css';
 
-
-// Could move these to URL params for router integration to persist state
 interface MatchDashboardProps {
-    activeMatch: any;
-    accountId: any;
+    activeMatch: MatchPreview;
+    setActiveMatch: Dispatch<SetStateAction<MatchPreview>>;
+    setMatchPreviews: Dispatch<SetStateAction<MatchPreview[]>>;
+    matchPreviews: MatchPreview[];
+    accountId: string;
+    accountDisplay: string;
 }
 
-const MatchDashboard: React.FC<MatchDashboardProps> = ({ activeMatch, accountId }) => {
+const MatchDashboard: React.FC<MatchDashboardProps> = ({ activeMatch, accountId, accountDisplay, matchPreviews, setMatchPreviews, setActiveMatch }) => {
 
-    const [matchData, setMatchData] = useState<any>(null);
-    const [matchDataLoading, setMatchDataLoading] = useState(false);
+    const [matchData, setMatchData] = useState<MatchData>();
+    const [matchDataLoading, setMatchDataLoading] = useState<boolean>(false);
 
     // User Inputs
-    const [activeAlly, setActiveAlly] = useState('');
-    const [activeEnemy, setActiveEnemy] = useState('');
-    const [activeMetric, setActiveMetric] = useState('XP');
-    const [activeRole, setActiveRole] = useState('Mid');
+    const [activeAllyPlayers, setActiveAllyPlayers] = useState<ActivePlayer[]>([]);
+    const [activeEnemyPlayers, setActiveEnemyPlayers] = useState<ActivePlayer[]>([]);
+    const [activeRoles, setActiveRoles] = useState<string[]>([]);
+    const [activeMarkers, setActiveMarkers] = useState<string[]>([]);
+
+    const [activeMetric, setActiveMetric] = useState<Metric>(Metric.XP);
+    const [activeMode, setActiveMode] = useState<Mode>(Mode.ADVANTAGE);
 
     // Data
-    const [activeAllyDataset, setActiveAllyDataset] = useState([]);
-    const [activeEnemyDataset, setActiveEnemyDataset] = useState([]);
+    const [activeAllyDatasets, setActiveAllyDatasets] = useState<MetricData[]>([]);
+    const [activeEnemyDatasets, setActiveEnemyDatasets] = useState<MetricData[]>([]);
 
     // Events
-    const [eventTimeline, setEventTimeline] = useState([]);
-    const [activeEvents, setActiveEvents] = useState<any>([]);
+    const [activeEvents, setActiveEvents] = useState<Event[]>([]);
 
+    const handleSwitchAccount = () => {
+        setMatchData(undefined);
+        setMatchPreviews([]);
+    }
+
+    const handleMatchSelect = (match: MatchPreview) => {
+        if (match) {
+            setActiveMatch(match)
+        }
+    }
 
     const fetchMatchData = async () => {
 
-        const matchData = await getMatchData(activeMatch['matchId'], accountId);
-        setMatchData(matchData);
+        const matchData = await getMatchData(activeMatch.matchId, accountId);
 
+        if (matchData && matchData.events) {
+            const events = matchData.events;
+            setActiveEvents(events);
+            setMatchData(matchData);
+        }
     }
 
     useEffect(() => {
-        
-        if (activeMatch) {
+
+        if (activeMatch && accountId) {
             setMatchDataLoading(true);
             fetchMatchData();
             setMatchDataLoading(false);
         }
         
-    }, [activeMatch])
+    }, [activeMatch, accountId])
+
 
     useEffect(() => {
 
-        if (matchData) {
+        // On Match Data Load - Set Initial Players & Role based off user
+        if (matchData && activeMatch) {
 
-            const playerId = activeMatch['playerParticipantId'];
-            const enemyId = activeMatch['enemyParticipantId'];
+            const initialActiveRoles = [activeMatch.role];
 
-            setActiveAlly(playerId);
-            setActiveEnemy(enemyId);
+            setActiveRoles(initialActiveRoles);
+
+            const initialActiveAllyPlayer: ActivePlayer = {
+                id: activeMatch.playerParticipantId,
+                champion: activeMatch.playerChampion,
+                role: activeMatch.role,
+                team: 'ally'
+            }
+
+            setActiveAllyPlayers([initialActiveAllyPlayer]);
+
+            const initialActiveEnemyPlayer: ActivePlayer = {
+                id: activeMatch.enemyParticipantId,
+                champion: activeMatch.enemyChampion,
+                role: activeMatch.role,
+                team: 'enemy'
+            }
+
+            setActiveEnemyPlayers([initialActiveEnemyPlayer]);
 
         }
 
-    }, [matchData])
+    }, [matchData, activeMatch])
     
     useEffect(() => {
 
-        if (matchData && activeAlly && activeEnemy) {
+        if (
+            matchData && 
+            activeAllyPlayers && activeAllyPlayers.length > 0 && 
+            activeEnemyPlayers && activeEnemyPlayers.length > 0
+        ) {
 
-            const datasets = matchData['data'];
+            const datasets = matchData.data;
 
-            const playerDatasets = datasets.find((dataset: any) => dataset['id'] === activeAlly);
+            const allyDatasets = datasets.filter((dataset: Data) => activeAllyPlayers.some((ally: ActivePlayer) => ally.id === dataset.id));
 
-            const enemyDatasets = datasets.find((dataset: any) => dataset['id'] === activeEnemy);
+            const enemyDatasets = datasets.filter((dataset: Data) => activeEnemyPlayers.some((enemy: ActivePlayer) => enemy.id === dataset.id));
 
-            const allyChampionName = matchData['participants'].find((p: any) => p.id === activeAlly).champion;
-            const enemyChampionName = matchData['participants'].find((p: any) => p.id === activeEnemy).champion;
+            const allyMetricDatasets = allyDatasets.map((dataset: Data) => {
 
-            if (activeMetric === 'XP') {
-                setActiveAllyDataset(playerDatasets['xp']);
-                setActiveEnemyDataset(enemyDatasets['xp']);
-            }
-
-            if (activeMetric === 'GOLD') {
-                setActiveAllyDataset(playerDatasets['gold']);
-                setActiveEnemyDataset(enemyDatasets['gold']);
-            }
-
-            // Filter Events that are relevant to the active ally & enemy
-            const filteredEvents = [];
-
-            for (const event of matchData['events']) {
-
-                let isNotable = false;
-
-                // What are relevant events
-                if (event['type'] === "kill") {
-
-                    // If Player Died - subtype === activeAlly
-                    if (event['subtype'] === activeAlly) {
-                        isNotable = true;
-                    }
-                    // If Player Got a kill - killer === activeAlly
-                    if (event['killer'] === activeAlly) {
-                        isNotable = true;
-                    }
-
-                    if (event['subtype'] === activeEnemy) {
-                        isNotable = true;
-                    }
-
-                    if (event['killer'] === activeEnemy) {
-                        isNotable = true;
-                    }
-
-                    if (event['killer'] === activeEnemy && event['subtype'] === activeAlly) {
-                        isNotable = true;
-                    }
-
-                    if (event['killer'] === activeAlly && event['subtype'] === activeEnemy) {
-                        isNotable = true;
-                    }
-        
+                const metricData: MetricData = {
+                    id: dataset.id,
+                    metric: activeMetric,
+                    data: dataset[activeMetric]
                 }
+                return metricData;
+            })
 
-                if (event['type'] === "objective") {
-                    isNotable = true;
+            const enemyMetricDatasets = enemyDatasets.map((dataset: Data) => {
+                const metricData: MetricData = {
+                    id: dataset.id,
+                    metric: activeMetric,
+                    data: dataset[activeMetric]
                 }
+                return metricData;
+            })
 
-                if (event['type'] === "turret") {
+            if (allyDatasets && enemyDatasets) {
 
-                    if (event['killer'] === activeAlly) {
-                        isNotable = true;
-                    }
-
-                    if (event['killer'] === activeEnemy) {
-                        isNotable = true;
-                    }
-
-                }
-
-                if (isNotable) {
-                    filteredEvents.push(event);
-                }
+                setActiveAllyDatasets(allyMetricDatasets);
+                setActiveEnemyDatasets(enemyMetricDatasets);
 
             }
-
-            setActiveEvents(filteredEvents);
-
-
-
         }
         
         
-    }, [activeAlly, activeEnemy, activeMetric])
+    }, [activeAllyPlayers, activeEnemyPlayers, activeMetric])
 
     return (
         <div className="dashboard-main-container">
-            <div className="dashboard-main-title">
-                <span className="gold">G</span>XP
+            <div className="dashboard-header-container">
+                <div className="account-container">
+                    <div onClick={handleSwitchAccount} className="change-account">
+                        Switch Account
+                    </div>
+                    <div className="active-account-title">
+                        <h3>{accountDisplay}</h3>
+                    </div>
+                </div>
+                <div className="dashboard-main-title">
+                    <span className="gold">G</span>XP
+                </div>
             </div>
             <div className="dashboard-sub-container">
-                <div className="dashboard-graph-container">
-                    <TimelineGraph activeAllyDataset={activeAllyDataset} activeEnemyDataset={activeEnemyDataset} activeMetric={activeMetric} events={activeEvents}/>
+                <div className="match-list-container">
+                    {matchPreviews.map((match: MatchPreview) => (
+                        <div onClick={() => handleMatchSelect(match)} className={`match-container`}>
+                            <div className={`${(match.win === true) ? 'victory' : 'defeat'}`}>
+                                <ChampionImage champion={match.playerChampion} />
+                            </div>
+                            <span className={`${(activeMatch.matchId === match.matchId) ? 'active' : ''}`} style={{ padding: '10px', margin: '4px', height: '50%', display: 'flex', alignItems: 'center' }}>vs</span>
+                            <div>
+                            <ChampionImage champion={match.enemyChampion} /> 
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="dashboard-graph-main-container">
+                    { matchData &&
+                        <TimelineGraph 
+                            activeAllyDatasets={activeAllyDatasets} 
+                            activeEnemyDatasets={activeEnemyDatasets}
+                            activeRoles={activeRoles} 
+                            activeMetric={activeMetric} 
+                            activeMode={activeMode}
+                            activeMarkers={activeMarkers}
+                            events={activeEvents} 
+                            matchData={matchData}
+                            matchDataLoading={matchDataLoading}
+                        /> 
+                    }
                 </div>
                 <div className="dashboard-right-sub-container">
                     <div className="dashboard-legend">
-                        <MatchContext 
-                            matchData={matchData} 
-                            setActiveMetric={setActiveMetric} 
-                            activeAlly={activeAlly} 
-                            setActiveAlly={setActiveAlly} 
-                            activeEnemy={activeEnemy} 
-                            setActiveEnemy={setActiveEnemy} 
-                            activeMetric={activeMetric} 
-                            setActiveRole={setActiveRole}
-                            activeRole={activeRole}
-                        />
+                        { matchData && 
+                            <MatchContext 
+                                matchData={matchData} 
+                                setActiveMetric={setActiveMetric}  
+                                activeMetric={activeMetric} 
+                                setActiveMode={setActiveMode}
+                                activeMode={activeMode}
+                                setActiveAllyPlayers={setActiveAllyPlayers}
+                                activeAllyPlayers={activeAllyPlayers}
+                                setActiveEnemyPlayers={setActiveEnemyPlayers}
+                                activeEnemyPlayers={activeEnemyPlayers}
+                                setActiveRoles={setActiveRoles}
+                                activeRoles={activeRoles}
+                                setActiveMarkers={setActiveMarkers}
+                                activeMarkers={activeMarkers}
+                            />
+                        }
                     </div>
                     <div className="dashboard-timeline">
-                        <Timeline matchData={matchData} events={activeEvents} />
                     </div>
                 </div>
             </div>

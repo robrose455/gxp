@@ -2,16 +2,18 @@ import { Box, TextField, Button } from '@mui/material'
 import React, { useState } from 'react'
 import { Dispatch } from 'react';
 import { SetStateAction } from 'react';
-import { getMatchPreviews } from '../riot.api';
+import { getMatchPreviews } from '../../riot.api';
+import { MatchPreview } from '../../types';
 
 interface AccountSelectProps {
-    setMatchPreviews: Dispatch<SetStateAction<never[]>>;
+    setMatchPreviews: Dispatch<SetStateAction<MatchPreview[]>>;
     setLoading: Dispatch<SetStateAction<boolean>>;
-    setAccountId: Dispatch<SetStateAction<any>>;
+    setAccountId: Dispatch<SetStateAction<string>>;
+    setAccountDisplay: Dispatch<SetStateAction<string>>;
     loading: boolean;
 }
 
-const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoading, loading, setAccountId }) => {
+const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoading, setAccountId, setAccountDisplay, loading }) => {
 
     const [accountName, setAccountName] = useState('');
     const [accountTag, setAccountTag] = useState('');
@@ -20,6 +22,7 @@ const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoad
         event.preventDefault();
         setLoading(true);
         const matchPreviews = await getMatchPreviews(accountName, accountTag);
+        setAccountDisplay(`${accountName} #${accountTag}`)
         setAccountId(matchPreviews[0].accountId);
         setLoading(false);
         setMatchPreviews(matchPreviews);
@@ -56,7 +59,7 @@ const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoad
             <TextField
                 label="Tag"
                 variant="outlined"
-                placeholder="#NA1"
+                placeholder="NA1"
                 onChange={(e) => setAccountTag(e.target.value)}
                 InputProps={{
                     style: { backgroundColor: '#1E1E1E', color: '#E0E0E0' },
@@ -70,7 +73,7 @@ const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoad
             />
             <Button
                 variant="contained"
-                onClick={handleSubmit}
+                onClick={(e) => handleSubmit(e)}
                 sx={{ backgroundColor: "#B8860B", color: "#FFFFFF", flexShrink: 0 }}
             >
                 Find Matches

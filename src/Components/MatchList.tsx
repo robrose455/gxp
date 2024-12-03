@@ -1,14 +1,15 @@
 import { Card, CardContent, Grid2, Typography, Box } from '@mui/material'
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { MatchPreview } from '../types';
 
 interface MatchListProps {
-    matchPreviews: any[];
-    setActiveMatch: Dispatch<SetStateAction<any>>
+    matchPreviews: MatchPreview[];
+    setActiveMatch: Dispatch<SetStateAction<MatchPreview>>
 }
 
 const MatchList: React.FC<MatchListProps> = ({ matchPreviews, setActiveMatch }) => {
 
-  const handleClick = (match: any) => {
+  const handleClick = (match: MatchPreview) => {
     setActiveMatch(match);
   }
 
@@ -38,7 +39,7 @@ const MatchList: React.FC<MatchListProps> = ({ matchPreviews, setActiveMatch }) 
           <Card
             onClick={() => handleClick(match)}
             sx={{
-              borderTop: match['win'] ? '3px solid #4CAFEB' : '3px solid #FF4C4C',
+              borderTop: match.win ? '3px solid #4CAFEB' : '3px solid #FF4C4C',
               height: '150px',
               minWidth: '125px',
               display: 'flex',
@@ -62,14 +63,14 @@ const MatchList: React.FC<MatchListProps> = ({ matchPreviews, setActiveMatch }) 
               }}
             >
               <Typography sx={{ padding: 1, borderBottom: '1px solid white'}}>
-                {match['role']}
+                {match.role}
               </Typography>
               <Typography variant="h6" sx={{ marginTop: 1, fontWeight: 'bold', color: "#B8860B"  }}>
-                {match['playerChampion']}
+                {match.playerChampion}
               </Typography>
                <span style={{ padding: '10px' }}>vs</span>
               <Typography variant="body1" sx={{ marginTop: 1, color: "#B8860B" }}>
-                {match['enemyChampion']}
+                {match.enemyChampion}
               </Typography>
             </CardContent>
           </Card>
