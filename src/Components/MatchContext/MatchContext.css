@@ -44,11 +44,13 @@
     border-radius: 5px;
     margin-top: 10px;
     margin-bottom: 10px;
+    background-color: #495057;
     border: 1px solid goldenrod;
     margin-left: 16px;
 }
 
 .champion-list-item {
+    background-color: #495057;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -91,6 +93,7 @@
 
 .graph-config-item {
     border: 1px solid goldenrod;
+    background-color: #495057;
     height: 40px;
     width: 50%;
     display: flex;
