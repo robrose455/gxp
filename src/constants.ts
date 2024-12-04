@@ -4,7 +4,7 @@ export const MARKERS = ['Baron', 'Death', 'Kill'];
 
 export enum Metric {
     XP = 'xp',
-    GOLD = 'gold',
+    GOLD = "gold",
     CS = 'cs'
 }
 
