@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { MatchData, MatchPreview } from './types';
 
-const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:4000' : 'https://gxp-api-277f714413c2.herokuapp.com/'
+const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:4000' : 'https://gxp-api-277f714413c2.herokuapp.com'
 
 export async function getMatchPreviews(name: string, tag: string): Promise<MatchPreview[]> {
     try {
