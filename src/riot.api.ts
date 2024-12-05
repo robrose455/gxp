@@ -13,6 +13,16 @@ export async function getMatchPreviews(name: string, tag: string): Promise<Match
   }
 }
 
+export async function getMatchPreview(matchId: string, accountId: string): Promise<MatchPreview> {
+  try {
+  const response = await axios.get(`${BASE_URL}/matchPreview?matchId=${matchId}&accountId=${accountId}`);
+  return response.data;
+} catch (error) {
+  console.error('Error getting match preview data:', error);
+  throw error;
+}
+}
+
 export async function getMatchData(id: string, accountId: string): Promise<MatchData> {
   try {
     const response = await axios.get(`${BASE_URL}/match?id=${id}&accountId=${accountId}`);

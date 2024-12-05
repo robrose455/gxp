@@ -231,8 +231,6 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
 
             }
 
-            console.log('Finish: ', computedMetricData);
-
             setComputedMetricDataset(computedMetricData);
             setDataLoaded(true);
 

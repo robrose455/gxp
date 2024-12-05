@@ -4,28 +4,38 @@ import { Dispatch } from 'react';
 import { SetStateAction } from 'react';
 import { getMatchPreviews } from '../../riot.api';
 import { MatchPreview } from '../../types';
+import { useNavigate } from 'react-router-dom';
 
 interface AccountSelectProps {
     setMatchPreviews: Dispatch<SetStateAction<MatchPreview[]>>;
     setLoading: Dispatch<SetStateAction<boolean>>;
     setAccountId: Dispatch<SetStateAction<string>>;
     setAccountDisplay: Dispatch<SetStateAction<string>>;
-    loading: boolean;
+    error: any;
+    setError: Dispatch<SetStateAction<any>>;
 }
 
-const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoading, setAccountId, setAccountDisplay, loading }) => {
+const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoading, setAccountId, setAccountDisplay, error, setError }) => {
 
     const [accountName, setAccountName] = useState('');
     const [accountTag, setAccountTag] = useState('');
 
     const handleSubmit = async (event: any) => {
+        
         event.preventDefault();
         setLoading(true);
-        const matchPreviews = await getMatchPreviews(accountName, accountTag);
-        setAccountDisplay(`${accountName} #${accountTag}`)
-        setAccountId(matchPreviews[0].accountId);
-        setLoading(false);
-        setMatchPreviews(matchPreviews);
+
+        try {
+            const matchPreviews = await getMatchPreviews(accountName, accountTag);
+            setAccountDisplay(`${accountName} #${accountTag}`)
+            setAccountId(matchPreviews[0].accountId);
+            setLoading(false);
+            setMatchPreviews(matchPreviews);
+            
+        } catch (error) {
+            setError(true);
+            setLoading(false);
+        }
     };
 
     return (

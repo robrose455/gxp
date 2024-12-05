@@ -38,3 +38,24 @@
     justify-content: center;
     align-items: center;
 }
+
+.error-container {
+    padding: 50px;
+    width: 200px;
+    margin: auto;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-message {
+    padding: 10px;
+}
+
+.error-retry-button {
+    background-color: #B8860B;
+    border-radius: 5px;
+    padding: 8px;
+    margin: 16px;
+    cursor: pointer;
+    color: white;
+}

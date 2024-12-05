@@ -1,22 +1,41 @@
 import './HomePage.css'
 import AccountSelect from '../Components/AccountSelect/AccountSelect';
 import MatchList from '../Components/MatchList';
-import { useState, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect } from 'react';
 import { CircularProgress } from '@mui/material';
-import { MatchData, MatchPreview } from '../types';
+import { MatchPreview } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 
-interface HomePageProps {
-    setActiveMatch: Dispatch<SetStateAction<MatchPreview>>;
-    setAccountId: Dispatch<SetStateAction<string>>;
-    setAccountDisplay: Dispatch<SetStateAction<string>>;
-    setMatchPreviews: Dispatch<SetStateAction<MatchPreview[]>>;
-    matchPreviews: MatchPreview[];
-}
+const HomePage = () => {
 
-const HomePage: React.FC<HomePageProps> = ({ setActiveMatch, setAccountId, setMatchPreviews, setAccountDisplay, matchPreviews }) => {
+    const navigate = useNavigate();
 
+    const [activeMatch, setActiveMatch] = useState<MatchPreview>({} as MatchPreview);
+    const [accountId, setAccountId] = useState<string>("");
+    const [accountDisplay, setAccountDisplay] = useState<string>("");
+    const [matchPreviews, setMatchPreviews] = useState<MatchPreview[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<boolean>(false);
+
+    const handleRetry = () => {
+        setError(false);
+    }
+
+    useEffect(() => {
+
+        if (activeMatch && accountId && accountDisplay) {
+
+            const queryParams = new URLSearchParams({
+                accountId,
+                accountName: accountDisplay,
+                matchId: activeMatch.matchId,
+            })
+
+            navigate(`/dashboard?${queryParams.toString()}`)
+
+        }
+    }, [activeMatch])
 
     return (
         <div className="main-container">
@@ -27,9 +46,11 @@ const HomePage: React.FC<HomePageProps> = ({ setActiveMatch, setAccountId, setMa
                 <div className="account-select-container">
                     <AccountSelect 
                         setMatchPreviews={setMatchPreviews} 
-                        setLoading={setLoading} loading={loading} 
+                        setLoading={setLoading}
                         setAccountId={setAccountId} 
                         setAccountDisplay={setAccountDisplay}
+                        error={error}
+                        setError={setError}
                     />
                 </div>
                 { loading ? 
