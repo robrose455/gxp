@@ -12,8 +12,8 @@ import { ActivePlayer, MatchData, Participant } from '../../types';
 
 interface MatchContextProps {
     matchData: MatchData;
-    setActiveMetric: Dispatch<SetStateAction<Metric>>;
-    activeMetric: Metric;
+    setActiveMetrics: Dispatch<SetStateAction<Metric[]>>;
+    activeMetrics: Metric[];
     setActiveMode: Dispatch<SetStateAction<Mode>>;
     activeMode: Mode;
     setActiveAllyPlayers: Dispatch<SetStateAction<ActivePlayer[]>>;
@@ -28,8 +28,8 @@ interface MatchContextProps {
 
 const MatchContext: React.FC<MatchContextProps> = ({ 
     matchData, 
-    setActiveMetric,  
-    activeMetric,
+    setActiveMetrics,  
+    activeMetrics,
     setActiveRoles,
     activeRoles,
     setActiveMode,
@@ -95,7 +95,14 @@ const MatchContext: React.FC<MatchContextProps> = ({
     const handleMetricClick = (metric: Metric) => {
 
        if (metric) {
-           setActiveMetric(metric);
+            let activeMetricsBuffer = [...activeMetrics]
+            if (activeMetricsBuffer.includes(metric)) {
+                activeMetricsBuffer = activeMetricsBuffer.filter((m) => m !== metric);
+            } else {
+                activeMetricsBuffer.push(metric);
+            }
+
+            setActiveMetrics(activeMetricsBuffer);
        }
 
     }
@@ -243,19 +250,19 @@ const MatchContext: React.FC<MatchContextProps> = ({
                         <h3 className="graph-config-title">Metric</h3>
                         <div 
                             onClick={() => handleMetricClick(Metric.GOLD)}
-                            className={`graph-config-item ${(activeMetric === Metric.GOLD) ? 'active' : ''}`}
+                            className={`graph-config-item ${(activeMetrics.includes(Metric.GOLD)) ? 'active' : ''}`}
                         >
                             Gold
                         </div>
                         <div 
                             onClick={() => handleMetricClick(Metric.XP)}
-                            className={`graph-config-item ${(activeMetric === Metric.XP) ? 'active' : ''}`}
+                            className={`graph-config-item ${(activeMetrics.includes(Metric.XP)) ? 'active' : ''}`}
                         >
                             XP
                         </div>
                         <div 
                             onClick={() => handleMetricClick(Metric.CS)}
-                            className={`graph-config-item ${(activeMetric === Metric.CS) ? 'active' : ''}`}
+                            className={`graph-config-item ${(activeMetrics.includes(Metric.CS)) ? 'active' : ''}`}
                         >
                             CS
                         </div>

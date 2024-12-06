@@ -56,3 +56,15 @@ export type ActivePlayer = {
     role: string;
     team: string;
 }
+
+export type Dataset = {
+    metric: string,
+    mode: string,
+    data: number[]
+    display: MetricDisplay
+}
+
+export type MetricDisplay = {
+    title: string;
+    theme: any; 
+}

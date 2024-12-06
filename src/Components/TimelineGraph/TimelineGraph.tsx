@@ -17,9 +17,7 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 import React, { useEffect, useState } from 'react'
 import { Line } from 'react-chartjs-2';
 import { Metric, Mode } from '../../constants';
-import { calculateDeathTimer } from '../../death-timer-util';
-import { getSecondsOffsetFromTimestamp } from '../../timestamp-util';
-import { Data, Event, MatchData, MetricData } from '../../types';
+import { Data, Dataset, Event, MatchData, MetricData } from '../../types';
 import './TimelineGraph.css';
 
 ChartJS.register(
@@ -36,36 +34,28 @@ ChartJS.register(
 );
 
 interface TimelineGraphProps {
-    activeAllyDatasets: MetricData[];
-    activeEnemyDatasets: MetricData[];
-    activeMetric: Metric;
+    activeDatasets: Dataset[];
+    activeMetrics: Metric[];
     activeMode: Mode;
     activeMarkers: string[];
-    activeRoles: string[];
     matchData: MatchData;
-    matchDataLoading: boolean;
     events: Event[]
 }
 
 const TimelineGraph: React.FC<TimelineGraphProps> = ({ 
-    activeAllyDatasets, 
-    activeEnemyDatasets, 
-    activeMetric,
+    activeDatasets, 
+    activeMetrics,
     activeMode,
-    activeRoles,
     activeMarkers,
     events, 
     matchData,
-    matchDataLoading
 }) => {
 
-    const [activeMetricTheme, setActiveMetricTheme] = useState<any>({
-        borderColor: '#DAA520',
-        backgroundColor: 'rgba(218, 165, 32, 0.2)', 
-    });
-
-    const [displayMetric, setDisplayMetric] = useState<string>("");
     const [displayMode, setDisplayMode] = useState<string>("");
+
+    const [graphDatasets, setGraphDatasets] = useState<any[]>([]);
+    const [graphYMin, setGraphYMin] = useState<number>(0);
+    const [graphYMax, setGraphYMax] = useState<number>(1000);
 
     // Loading State
     const [dataLoaded, setDataLoaded] = useState(false);
@@ -77,7 +67,6 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
     const [numOfFrames, setNumOfFrames] = useState<any>(0);
 
     // Computed data ready for graph display
-    const [computedMetricDataset, setComputedMetricDataset] = useState<any>([]);
     const [computedBaronPowerPlays, setComputedBaronPowerPlays] = useState<any>([])
     const [computedDeath, setComputedDeath] = useState<any>([]);
     const [computedKills, setComputedKills] = useState<any>([]);
@@ -85,9 +74,9 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
     // New Data Coming In -> Setup New Frames
     useEffect(() => {
 
-        if (activeAllyDatasets?.length > 0 && activeEnemyDatasets?.length > 0) {
+        if (activeDatasets?.length > 0) {
 
-            const sampleDataset = activeAllyDatasets[0];
+            const sampleDataset = activeDatasets[0];
             setMinFrame(0);
             setMaxFrame(sampleDataset.data.length - 2);
             setNumOfFrames(sampleDataset.data.length - 2);
@@ -100,34 +89,7 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
             setFrameLabels(graphLabels);
         }
 
-    }, [activeAllyDatasets, events])
-
-    useEffect(() => {
-
-        switch (activeMetric) {
-            case Metric.XP:
-                setDisplayMetric('XP');
-                setActiveMetricTheme({
-                    borderColor: '#FF007F',
-                    backgroundColor: 'rgba(255, 102, 178, 0.2)',
-                })
-                break;
-            case Metric.GOLD:
-                setDisplayMetric('Gold');
-                setActiveMetricTheme({
-                    borderColor: '#DAA520',
-                    backgroundColor: 'rgba(218, 165, 32, 0.2)',
-                })
-                break;
-            case Metric.CS:
-                setDisplayMetric('CS')
-                setActiveMetricTheme({
-                    borderColor: '#D50032',
-                    backgroundColor: 'rgba(255, 65, 54, 0.2)'
-                })
-                break;
-        }
-    }, [activeMetric])
+    }, [activeDatasets, events])
 
     useEffect(() => {
 
@@ -158,7 +120,7 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
     }, [minFrame, maxFrame])
 
     // On Frame Change - Recalcuate Annotation Event Data Set
-    useEffect(() => {
+    /* useEffect(() => {
         
         if (activeMarkers.includes('Death')) {
             buildComputedDeathAnnotations();
@@ -178,65 +140,8 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
             setComputedKills(null);
         }
 
-    }, [activeAllyDatasets, minFrame, maxFrame, activeMarkers]) 
-
-    // On Frame Change - Recalculate Metric Data Set
-    useEffect(() => {
-
-        if (activeAllyDatasets?.length > 0 && activeEnemyDatasets?.length > 0 && maxFrame > 0 && numOfFrames > 0) {
-
-            const computedMetricData: any[] = [];
-
-            let aggregatedAllyDataset: number[] = [];
-            
-            for (let i = 0; i < activeEnemyDatasets[0].data.length; i++) {
-                let aggregatedDatapoint = 0;
-                for (const allyDataset of activeAllyDatasets) {
-                    const datapoint = allyDataset.data[i];
-                    aggregatedDatapoint = aggregatedDatapoint + datapoint;
-                }
-                aggregatedAllyDataset.push(aggregatedDatapoint);
-            }
-
-             let aggregatedEnemyDataset: number[] = [];
-            
-            for (let i = 0; i < activeEnemyDatasets[0].data.length; i++) {
-                let aggregatedDatapoint = 0;
-                for (const enemyDataset of activeEnemyDatasets) {
-                    const datapoint = enemyDataset.data[i];
-                    aggregatedDatapoint = aggregatedDatapoint + datapoint;
-                }
-                aggregatedEnemyDataset.push(aggregatedDatapoint);
-            }
-
-            for (let i = minFrame; i <= maxFrame; i++) {
-
-                let computedMetricDataPoint = 0;
-
-                if (activeMode === Mode.GROWTH) {
-                    if (aggregatedAllyDataset[i] === 0 || aggregatedEnemyDataset[i + 1] === 0) {
-                        computedMetricDataPoint = 0;
-                    } else {
-                        const allyGrowthRate = ((aggregatedAllyDataset[i + 1] - aggregatedAllyDataset[i]));
-                        const enemyGrowthRate = ((aggregatedEnemyDataset[i + 1] - aggregatedEnemyDataset[i])); 
-                        computedMetricDataPoint = allyGrowthRate - enemyGrowthRate; // Difference in growth rate percentage
-                    }
-                }
-
-                if (activeMode === Mode.ADVANTAGE) {
-                    computedMetricDataPoint = aggregatedAllyDataset[i] - aggregatedEnemyDataset[i];
-                }
-
-                computedMetricData.push(computedMetricDataPoint);
-
-            }
-
-            setComputedMetricDataset(computedMetricData);
-            setDataLoaded(true);
-
-        }
-
-    }, [activeAllyDatasets, activeEnemyDatasets, minFrame, maxFrame, activeMetric, activeMode])
+    }, [activeDatasets, activeMarkers]) */
+    
 
     const handleMinFrameChange = (event: any) => {
 
@@ -258,8 +163,9 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
         setMinFrame(0);
         setMaxFrame(numOfFrames);
     }
+
     
-    const buildComputedKillAnnotations = () => {
+    /* const buildComputedKillAnnotations = () => {
 
         let index = 0;
 
@@ -382,7 +288,49 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
         }
 
         setComputedBaronPowerPlays(baronAnnotationsObject);
-    }
+    } */
+
+        useEffect(() => {
+
+            let graphInputs = [];
+
+            console.log('Check A: ', activeDatasets)
+            for (const dataset of activeDatasets) {
+                const graphInput = {
+                    label: `${dataset.metric} ${dataset.mode}`,
+                    data: dataset.data,
+                    borderColor: dataset.display.theme['borderColor'],
+                    backgroundColor: dataset.display.theme['backgroundColor'],
+                    fill: true,
+                    borderWidth: 2
+                }
+
+                graphInputs.push(graphInput)
+            }
+
+            setGraphDatasets(graphInputs)
+            console.log(graphInputs);
+            setDataLoaded(true)
+
+        }, [activeDatasets])
+
+        useEffect(() => {
+
+            const rawDatasets = activeDatasets.map((dataset) => {
+                return dataset.data;
+            })
+
+            const flatData = rawDatasets.flat()
+
+            const max = Math.max(...flatData);
+            const min = Math.min(...flatData);
+
+            setGraphYMax(max);
+            setGraphYMin(min);
+
+        }, [activeDatasets])
+
+        
 
     
       const options = {
@@ -394,7 +342,7 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
             },
             title: {
                 display: true,
-                text: `${displayMetric} ${displayMode}`,
+                text: `${displayMode}`,
                 color: '#E0E0E0',
                 padding: 20,
                 font: {
@@ -405,14 +353,18 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
                 labels: {
                     padding: 20,
                     generateLabels: (chart: any) => {
-                        const labels = [
-                            {
-                                text: `${displayMetric} ${displayMode}`,
+
+                        const metricLabels = activeDatasets.map((dataset) => {
+                            return {
+                                text: `${dataset.display.title}`,
                                 fontColor: '#E0E0E0',
-                                fillStyle: activeMetricTheme.backgroundColor,
-                                strokeStyle: activeMetricTheme.borderColor,
+                                fillStyle: dataset.display.theme['backgroundColor'],
+                                strokeStyle: dataset.display.theme['borderColor'],
                                 lineWidth: 2 
-                            },
+                            }
+                        })
+                        const labels = [
+                            ...metricLabels,
                             {
                                 text: "Time Dead",
                                 fontColor: '#E0E0E0',
@@ -467,24 +419,16 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
                 ticks: {
                     color: '#E0E0E0', 
                 },
-                suggestedMin: Math.min(...computedMetricDataset),
-                suggestedMax: Math.max(...computedMetricDataset)
+                suggestedMin: graphYMin,
+                suggestedMax: graphYMax
             },
         },
     }
 
     const data = {
+
         labels: frameLabels,
-        datasets: [
-            {
-                label: `${activeMetric} ${activeMode}`, // TODO Add Champion Name To Dataset Context
-                data: computedMetricDataset,
-                borderColor: activeMetricTheme.borderColor,
-                backgroundColor: activeMetricTheme.backgroundColor,
-                fill: true,
-                borderWidth: 2,
-            }
-        ]
+        datasets: graphDatasets
     }
 
     return (

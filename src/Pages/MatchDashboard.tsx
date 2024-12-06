@@ -4,7 +4,7 @@ import MatchContext from '../Components/MatchContext/MatchContext';
 import TimelineGraph from '../Components/TimelineGraph/TimelineGraph';
 import { Metric, Mode } from '../constants';
 import { getMatchData, getMatchPreview } from '../riot.api';
-import { MatchData, Event, Data, MatchPreview, ActivePlayer, MetricData } from '../types';
+import { MatchData, Event, Data, MatchPreview, ActivePlayer, MetricData, Dataset } from '../types';
 import './MatchDashboard.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -18,7 +18,7 @@ const MatchDashboard = () => {
     const accountId = searchParams.get('accountId') || "";
     const accountName = searchParams.get('accountName') || "";
     const matchId = searchParams.get('matchId') || "";
-    
+
     const [matchPreviewData, setMatchPreviewData] = useState<MatchPreview>({} as MatchPreview);
     const [matchData, setMatchData] = useState<MatchData>();
     const [matchDataLoading, setMatchDataLoading] = useState<boolean>(false);
@@ -28,26 +28,18 @@ const MatchDashboard = () => {
     const [activeEnemyPlayers, setActiveEnemyPlayers] = useState<ActivePlayer[]>([]);
     const [activeRoles, setActiveRoles] = useState<string[]>([]);
     const [activeMarkers, setActiveMarkers] = useState<string[]>([]);
-
-    const [activeMetric, setActiveMetric] = useState<Metric>(Metric.XP);
+    const [activeMetrics, setActiveMetrics] = useState<Metric[]>([]);
+    
     const [activeMode, setActiveMode] = useState<Mode>(Mode.ADVANTAGE);
 
     // Data
-    const [activeAllyDatasets, setActiveAllyDatasets] = useState<MetricData[]>([]);
-    const [activeEnemyDatasets, setActiveEnemyDatasets] = useState<MetricData[]>([]);
+    const [activeDatasets, setActiveDatasets] = useState<Dataset[]>([]);
 
     // Events
     const [activeEvents, setActiveEvents] = useState<Event[]>([]);
 
     const handleSwitchAccount = () => {
         navigate('/')
-    }
-
-    const handleMatchSelect = (match: MatchPreview) => {
-        if (match) {
-            // setActiveMatch(match)
-            // Replace this with addition of changing of URL params & reload
-        }
     }
 
     const fetchMatchData = async () => {
@@ -115,39 +107,136 @@ const MatchDashboard = () => {
 
             const datasets = matchData.data;
 
-            const allyDatasets = datasets.filter((dataset: Data) => activeAllyPlayers.some((ally: ActivePlayer) => ally.id === dataset.id));
+            const allyDatasets: Data[] = datasets.filter((dataset: Data) => activeAllyPlayers.some((ally: ActivePlayer) => ally.id === dataset.id));
 
-            const enemyDatasets = datasets.filter((dataset: Data) => activeEnemyPlayers.some((enemy: ActivePlayer) => enemy.id === dataset.id));
+            const enemyDatasets: Data[] = datasets.filter((dataset: Data) => activeEnemyPlayers.some((enemy: ActivePlayer) => enemy.id === dataset.id));
 
-            const allyMetricDatasets = allyDatasets.map((dataset: Data) => {
+            let activeDatasets: Dataset[] = [];
 
-                const metricData: MetricData = {
-                    id: dataset.id,
-                    metric: activeMetric,
-                    data: dataset[activeMetric]
+            for (const metric of activeMetrics) {
+                
+                const allyMetricDatasets: number[][] = allyDatasets.map((dataset) => {
+                    return dataset[metric];
+                })
+
+                const enemyMetricDatasets: number[][] = enemyDatasets.map((dataset) => {
+                    return dataset[metric];
+                })
+
+                const computedDataset: Dataset = {
+                    metric,
+                    mode: activeMode,
+                    data: computeMetricData(allyMetricDatasets, enemyMetricDatasets, metric),
+                    display: getDisplayForMetric(metric)
                 }
-                return metricData;
-            })
 
-            const enemyMetricDatasets = enemyDatasets.map((dataset: Data) => {
-                const metricData: MetricData = {
-                    id: dataset.id,
-                    metric: activeMetric,
-                    data: dataset[activeMetric]
-                }
-                return metricData;
-            })
-
-            if (allyDatasets && enemyDatasets) {
-
-                setActiveAllyDatasets(allyMetricDatasets);
-                setActiveEnemyDatasets(enemyMetricDatasets);
+                activeDatasets.push(computedDataset);
 
             }
+
+            setActiveDatasets(activeDatasets);
+
         }
         
-        
-    }, [activeAllyPlayers, activeEnemyPlayers, activeMetric])
+    }, [activeAllyPlayers, activeEnemyPlayers, activeMetrics, activeMode])
+
+    const computeMetricData = (allyDatasets: number[][], enemyDatasets: number[][], metric: Metric) => {
+
+        const computedMetricData: any[] = [];
+
+            let aggregatedAllyDataset: number[] = [];
+            
+            for (let i = 0; i < allyDatasets[0].length; i++) {
+                let aggregatedDatapoint = 0;
+                for (const allyDataset of allyDatasets) {
+                    const datapoint = allyDataset[i];
+                    aggregatedDatapoint = aggregatedDatapoint + datapoint;
+                }
+                aggregatedAllyDataset.push(aggregatedDatapoint);
+            }
+
+            let aggregatedEnemyDataset: number[] = [];
+            
+            for (let i = 0; i < enemyDatasets[0].length; i++) {
+                let aggregatedDatapoint = 0;
+                for (const enemyDataset of enemyDatasets) {
+                    const datapoint = enemyDataset[i];
+                    aggregatedDatapoint = aggregatedDatapoint + datapoint;
+                }
+                aggregatedEnemyDataset.push(aggregatedDatapoint);
+            }
+
+            // TODO: Reinstate Max Frame Min Frame
+            for (let i = 0; i <= allyDatasets[0].length; i++) {
+
+                let computedMetricDataPoint = 0;
+
+                if (activeMode === Mode.GROWTH) {
+                    if (aggregatedAllyDataset[i] === 0 || aggregatedEnemyDataset[i + 1] === 0) {
+                        computedMetricDataPoint = 0;
+                    } else {
+                        const allyGrowthRate = ((aggregatedAllyDataset[i + 1] - aggregatedAllyDataset[i]));
+                        const enemyGrowthRate = ((aggregatedEnemyDataset[i + 1] - aggregatedEnemyDataset[i])); 
+                        computedMetricDataPoint = allyGrowthRate - enemyGrowthRate; // Difference in growth rate percentage
+                    }
+                }
+
+                if (activeMode === Mode.ADVANTAGE) {
+                    computedMetricDataPoint = (((aggregatedAllyDataset[i] - aggregatedEnemyDataset[i])) / aggregatedEnemyDataset[i]) * 100;
+
+                    if (i < 3 && metric === Metric.XP) {
+                        computedMetricDataPoint = 0;
+                    }
+                }
+
+                computedMetricData.push(computedMetricDataPoint);
+
+            }
+
+        return computedMetricData;
+
+    }
+
+    const getDisplayForMetric = (metric: Metric) => {
+
+        if (metric === Metric.XP) {
+            return {
+                title: 'XP',
+                theme: {
+                    borderColor: '#4C6EF5',
+                    backgroundColor: 'rgba(76, 110, 245, 0.2)',
+                }
+            }
+        }
+
+        if (metric === Metric.GOLD) {
+            return {
+                title: 'Gold',
+                theme: {
+                    borderColor: '#FFD700',
+                    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                }
+            }
+        }
+
+        if (metric === Metric.CS) {
+            return {
+                title: 'CS',
+                theme: {
+                    borderColor: '#FF4C4C',
+                    backgroundColor: 'rgba(255, 76, 76, 0.2)'
+                }
+            }
+        }
+
+        return {
+            title: 'Data',
+            theme: {
+                borderColor: 'white',
+                backgroundColor: 'white'
+            }
+        }
+    }
 
     return (
         <div className="dashboard-main-container">
@@ -168,15 +257,12 @@ const MatchDashboard = () => {
                 <div className="dashboard-graph-main-container">
                     { matchData &&
                         <TimelineGraph 
-                            activeAllyDatasets={activeAllyDatasets} 
-                            activeEnemyDatasets={activeEnemyDatasets}
-                            activeRoles={activeRoles} 
-                            activeMetric={activeMetric} 
+                            activeDatasets={activeDatasets}
+                            activeMetrics={activeMetrics} 
                             activeMode={activeMode}
                             activeMarkers={activeMarkers}
                             events={activeEvents} 
                             matchData={matchData}
-                            matchDataLoading={matchDataLoading}
                         /> 
                     }
                 </div>
@@ -185,8 +271,8 @@ const MatchDashboard = () => {
                         { matchData && 
                             <MatchContext 
                                 matchData={matchData} 
-                                setActiveMetric={setActiveMetric}  
-                                activeMetric={activeMetric} 
+                                setActiveMetrics={setActiveMetrics}  
+                                activeMetrics={activeMetrics} 
                                 setActiveMode={setActiveMode}
                                 activeMode={activeMode}
                                 setActiveAllyPlayers={setActiveAllyPlayers}
