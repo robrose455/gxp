@@ -28,7 +28,7 @@ const MatchDashboard = () => {
     const [activeEnemyPlayers, setActiveEnemyPlayers] = useState<ActivePlayer[]>([]);
     const [activeRoles, setActiveRoles] = useState<string[]>([]);
     const [activeMarkers, setActiveMarkers] = useState<string[]>([]);
-    const [activeMetrics, setActiveMetrics] = useState<Metric[]>([]);
+    const [activeMetrics, setActiveMetrics] = useState<Metric[]>([Metric.GOLD, Metric.XP]);
     
     const [activeMode, setActiveMode] = useState<Mode>(Mode.ADVANTAGE);
 
