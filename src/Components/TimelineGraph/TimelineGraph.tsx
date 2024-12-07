@@ -19,6 +19,7 @@ import { Line } from 'react-chartjs-2';
 import { Metric, Mode } from '../../constants';
 import { Data, Dataset, Event, MatchData, MetricData } from '../../types';
 import './TimelineGraph.css';
+import { getSecondsOffsetFromTimestamp, toTitleCase } from '../../timestamp-util';
 
 ChartJS.register(
   CategoryScale,
@@ -98,7 +99,7 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
                 setDisplayMode('Growth Rate');
                 break;
             case Mode.ADVANTAGE:
-                setDisplayMode('Advantage');
+                setDisplayMode('Advantage Percentage');
                 break;   
         }
 
@@ -173,7 +174,7 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
 
         for (const event of events) {
 
-            if (event.type === 'kill' && ((activeEnemyDatasets.some((dataset) => dataset.id === event.killer)) || (activeAllyDatasets.some((dataset) => dataset.id === event.killer)))) {
+            if (event.type === 'kill' && ((activeDatasets.some((dataset) => dataset.id === event.killer)) || (activeAllyDatasets.some((dataset) => dataset.id === event.killer)))) {
 
                 const teamBorderColor = (event.team === 'ally') ? '#4CAFEB' : '#FF4C4C'
 
@@ -294,7 +295,6 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
 
             let graphInputs = [];
 
-            console.log('Check A: ', activeDatasets)
             for (const dataset of activeDatasets) {
                 const graphInput = {
                     label: `${dataset.metric} ${dataset.mode}`,
@@ -322,8 +322,8 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
 
             const flatData = rawDatasets.flat()
 
-            const max = Math.max(...flatData);
-            const min = Math.min(...flatData);
+            const max = Math.max(...flatData) + 10;
+            const min = Math.min(...flatData) + 10;
 
             setGraphYMax(max);
             setGraphYMin(min);
@@ -363,37 +363,51 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
                                 lineWidth: 2 
                             }
                         })
-                        const labels = [
-                            ...metricLabels,
-                            {
-                                text: "Time Dead",
-                                fontColor: '#E0E0E0',
-                                fillStyle: 'rgba(128, 128, 128, 1)',
-                                strokeStyle: 'rgba(128, 128, 128, 0.5)',
-                                lineWidth: 2,
-                            },
-                            {
-                                text: "Baron Buff",
-                                fontColor: '#E0E0E0',
-                                fillStyle: 'rgba(186, 85, 211, 1)',
-                                strokeStyle: 'rgba(186, 85, 211, 0.2)',
-                                lineWidth: 2
-                            },
-                            {
-                                text: `Ally Kill`,
-                                fontColor: '#E0E0E0',
-                                fillStyle: 'rgba(76, 175, 235, 1)',
-                                lineWidth: 2
-                            },
-                            {
-                                text: `Enemy Kill`,
-                                fontColor: '#E0E0E0',
-                                fillStyle: `rgba(255, 76, 76, 1)`,
+
+                        const markerLabels = activeMarkers.map((marker: string) => {
+
+                            if (marker === 'Death') {
+                                return {
+                                    text: "Time Dead",
+                                    fontColor: '#E0E0E0',
+                                    fillStyle: 'rgba(128, 128, 128, 1)',
+                                    strokeStyle: 'rgba(128, 128, 128, 0.5)',
+                                    lineWidth: 2,
+                                }
+                            }
+
+                            if (marker === 'Baron') {
+                                return {
+                                    text: "Baron Buff",
+                                    fontColor: '#E0E0E0',
+                                    fillStyle: 'rgba(186, 85, 211, 1)',
+                                    strokeStyle: 'rgba(186, 85, 211, 0.2)',
+                                    lineWidth: 2
+                                }
+                            }
+
+                            if (marker === 'Kill') {
+                                return {
+                                    text: `Ally Kill`,
+                                    fontColor: '#E0E0E0',
+                                    fillStyle: 'rgba(76, 175, 235, 1)',
+                                    lineWidth: 2 
+                                }
+                            }
+
+                            return {
+                                text: 'Marker',
+                                fontColor: 'white',
+                                fillStyle: 'white',
                                 lineWidth: 2
                             }
+                        })
+                        const labels = [
+                            ...metricLabels,
+                            ...markerLabels
                         ]
 
-                        return labels;
+                        return labels
                     }, 
                 },
             },
@@ -401,6 +415,20 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
                 backgroundColor: '#2E2E2E', 
                 titleColor: '#E0E0E0', 
                 bodyColor: '#E0E0E0', 
+                mode: 'index' as const,
+                callbacks: {
+                    label: function(context: any) {
+                        const value = context.raw;
+                        let sign = ""
+                        if (value > 0) {
+                            sign = "+"
+                        }
+                        return ` ${toTitleCase(context.dataset.label)}: ${sign}${value.toFixed(0)}%`
+                    },
+                    title: function(context: any) {
+                        return `${context[0].label} Minutes`
+                    }
+                }
             },
         },
         scales: {
@@ -426,7 +454,6 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
     }
 
     const data = {
-
         labels: frameLabels,
         datasets: graphDatasets
     }
@@ -436,38 +463,6 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
             { dataLoaded && 
                 <div className="line-graph">
                    <Line data={data} options={options} /> 
-                    <div className="minute-selection-container">
-                        <TextField
-                            label="From Minute:"
-                            type="number"
-                            value={minFrame}
-                            onChange={handleMinFrameChange}
-                            InputProps={{
-                                inputProps: { min: 0, max: numOfFrames },
-                                style: { backgroundColor: '#1E1E1E', color: '#E0E0E0', width: '100px' },
-                            }}
-                            InputLabelProps={{
-                                style: { color: '#9E9E9E' },
-                            }}
-                        />
-                        <TextField
-                            label="To Minute:"
-                            type="number"
-                            value={maxFrame}
-                            onChange={handleMaxFrameChange}
-                            InputProps={{
-                                inputProps: { min: 0, max: numOfFrames }, 
-                                style: { backgroundColor: '#1E1E1E', color: '#E0E0E0', width: '100px' },
-                            }}
-                            InputLabelProps={{
-                                style: { color: '#9E9E9E' },
-                            }}
-                            sx={{ marginLeft: '10px'}}
-                        />
-                        <Button onClick={handleReset} sx={{ color: 'goldenrod', marginTop: '10px', marginLeft: '10px'}}>
-                            Reset
-                        </Button>
-                    </div>
                 </div>
             }
         </div>

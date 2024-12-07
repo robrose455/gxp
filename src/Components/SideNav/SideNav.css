@@ -1,0 +1,25 @@
+.side-nav-main-container {
+    background-color: #1E1E1E;
+    width: 10%;
+    color: #E0E0E0;
+}
+
+.logo {
+    padding: 20px;
+    font-size: 40px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.nav-link-container {
+    height: 100%;
+}
+
+.nav-link-item {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px;
+    margin: 20px;
+}

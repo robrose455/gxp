@@ -3,6 +3,7 @@ import './MatchContext.css';
 import ChampionImage from '../ChampionImage/ChampionImage';
 import { MARKERS, Metric, Mode, ROLES } from '../../constants';
 import { ActivePlayer, MatchData, Participant } from '../../types';
+import RoleImage from '../RoleImage/RoleImage';
 
  type DisplayRole = {
     role: string,
@@ -231,60 +232,48 @@ const MatchContext: React.FC<MatchContextProps> = ({
     return (
         <div className="match-context-container">
             <div className="match-context-top-container">
-                <div className="champion-toggle-container">
-                    { displayRoleList && displayRoleList.length > 0 && displayRoleList.map((display: DisplayRole) => (
-                        <div onClick={() => handleRoleClick(display)} className='champion-team-container'>  
-                            <div className={`champion-list-item`}>
-                                <ChampionImage champion={display.allyChampion} /> 
-                            </div>
-                            <div className={`champion-list-item role ${(activeRoles.includes(display.role)) ? 'active' : ''}`}>{display.role}</div>
-                            <div className={`champion-list-item`}>
-                                <ChampionImage champion={display.enemyChampion} />  
-                            </div>
-                        </div>  
-                    ))}
-                    <div onClick={() => handleTeamClick()} className={`champion-team-container all ${(teamToggle) ? 'active': ''}`}>Team</div>
-                </div>
-                <div className="graph-config-container">
+            <div className="graph-config-container">
                     <div className="graph-config-sub-container">
                         <h3 className="graph-config-title">Metric</h3>
-                        <div 
-                            onClick={() => handleMetricClick(Metric.GOLD)}
-                            className={`graph-config-item ${(activeMetrics.includes(Metric.GOLD)) ? 'active' : ''}`}
-                        >
-                            Gold
-                        </div>
-                        <div 
-                            onClick={() => handleMetricClick(Metric.XP)}
-                            className={`graph-config-item ${(activeMetrics.includes(Metric.XP)) ? 'active' : ''}`}
-                        >
-                            XP
-                        </div>
-                        <div 
-                            onClick={() => handleMetricClick(Metric.CS)}
-                            className={`graph-config-item ${(activeMetrics.includes(Metric.CS)) ? 'active' : ''}`}
-                        >
-                            CS
+                        <div className="graph-config-content-container">
+                            <div 
+                                onClick={() => handleMetricClick(Metric.GOLD)}
+                                className={`graph-config-item ${(activeMetrics.includes(Metric.GOLD)) ? 'active' : ''}`}
+                            >
+                                Gold
+                            </div>
+                            <div 
+                                onClick={() => handleMetricClick(Metric.XP)}
+                                className={`graph-config-item ${(activeMetrics.includes(Metric.XP)) ? 'active' : ''}`}
+                            >
+                                XP
+                            </div>
+                            <div 
+                                onClick={() => handleMetricClick(Metric.CS)}
+                                className={`graph-config-item ${(activeMetrics.includes(Metric.CS)) ? 'active' : ''}`}
+                            >
+                                CS
+                            </div>
                         </div>
                     </div>
                     <div className="graph-config-sub-container">
                         <h3 className="graph-config-title">Mode</h3>
-                        <div 
-                            onClick={() => handleModeClick(Mode.ADVANTAGE)}
-                            className={`graph-config-item ${(activeMode === Mode.ADVANTAGE) ? 'active' : ''}`}
-                        >
-                            Advantage
-                        </div>
-                        <div 
-                            onClick={() => handleModeClick(Mode.GROWTH)}
-                            className={`graph-config-item ${(activeMode === Mode.GROWTH) ? 'active' : ''}`}
-                        >
-                            Growth Rate
+                        <div className="graph-config-content-container">
+                            <div 
+                                onClick={() => handleModeClick(Mode.ADVANTAGE)}
+                                className={`graph-config-item ${(activeMode === Mode.ADVANTAGE) ? 'active' : ''}`}
+                            >
+                                Advantage
+                            </div>
+                            <div 
+                                onClick={() => handleModeClick(Mode.GROWTH)}
+                                className={`graph-config-item ${(activeMode === Mode.GROWTH) ? 'active' : ''}`}
+                            >
+                                Growth Rate
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div className="match-context-bottom-container">
                 <h3 className="graph-config-title">Events</h3>
                 <div className="graph-marker-list">
                     { MARKERS.map((marker) => (
@@ -292,7 +281,23 @@ const MatchContext: React.FC<MatchContextProps> = ({
                     ))}
                 </div>
             </div>
-        </div>
+            <div className="match-context-bottom-container">
+                <div className="match-context-sub-top-container">
+                        { displayRoleList && displayRoleList.length > 0 && displayRoleList.map((display: DisplayRole) => (
+                            <div onClick={() => handleRoleClick(display)} className={`graph-role-item ${(activeRoles.includes(display.role)) ? 'active' : ''}`}> 
+                                <div className="graph-role-image-container">
+                                    <ChampionImage champion={display.allyChampion} /> 
+                                </div>
+                                <div className="graph-role-title">{display.role}</div>
+                                <div className="graph-role-image-container">
+                                    <ChampionImage champion={display.enemyChampion} />
+                                </div>
+                            </div>  
+                        ))}
+                        <div onClick={() => handleTeamClick()} className={`graph-role-item all ${(teamToggle) ? 'active': ''}`}>Team</div>
+                    </div>
+                </div>
+            </div>
     )
 }
 

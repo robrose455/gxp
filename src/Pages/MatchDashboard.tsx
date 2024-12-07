@@ -1,10 +1,9 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import ChampionImage from '../Components/ChampionImage/ChampionImage';
+import { useEffect, useState } from 'react'
 import MatchContext from '../Components/MatchContext/MatchContext';
 import TimelineGraph from '../Components/TimelineGraph/TimelineGraph';
 import { Metric, Mode } from '../constants';
 import { getMatchData, getMatchPreview } from '../riot.api';
-import { MatchData, Event, Data, MatchPreview, ActivePlayer, MetricData, Dataset } from '../types';
+import { MatchData, Event, Data, MatchPreview, ActivePlayer, Dataset } from '../types';
 import './MatchDashboard.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -21,7 +20,6 @@ const MatchDashboard = () => {
 
     const [matchPreviewData, setMatchPreviewData] = useState<MatchPreview>({} as MatchPreview);
     const [matchData, setMatchData] = useState<MatchData>();
-    const [matchDataLoading, setMatchDataLoading] = useState<boolean>(false);
 
     // User Inputs
     const [activeAllyPlayers, setActiveAllyPlayers] = useState<ActivePlayer[]>([]);
@@ -58,9 +56,7 @@ const MatchDashboard = () => {
     useEffect(() => {
 
         if (matchId && accountId) {
-            setMatchDataLoading(true);
             fetchMatchData();
-            setMatchDataLoading(false);
         }
         
     }, [matchId, accountId])
@@ -142,6 +138,9 @@ const MatchDashboard = () => {
 
     const computeMetricData = (allyDatasets: number[][], enemyDatasets: number[][], metric: Metric) => {
 
+        console.log(metric);
+        console.log(allyDatasets);
+        console.log(enemyDatasets);
         const computedMetricData: any[] = [];
 
             let aggregatedAllyDataset: number[] = [];
@@ -182,10 +181,11 @@ const MatchDashboard = () => {
                 }
 
                 if (activeMode === Mode.ADVANTAGE) {
-                    computedMetricDataPoint = (((aggregatedAllyDataset[i] - aggregatedEnemyDataset[i])) / aggregatedEnemyDataset[i]) * 100;
 
-                    if (i < 3 && metric === Metric.XP) {
+                    if (aggregatedEnemyDataset[i] === 0) {
                         computedMetricDataPoint = 0;
+                    } else {
+                        computedMetricDataPoint = (((aggregatedAllyDataset[i] - aggregatedEnemyDataset[i])) / aggregatedEnemyDataset[i]) * 100;
                     }
                 }
 
@@ -193,6 +193,7 @@ const MatchDashboard = () => {
 
             }
 
+        console.log(computedMetricData);
         return computedMetricData;
 
     }
@@ -240,19 +241,6 @@ const MatchDashboard = () => {
 
     return (
         <div className="dashboard-main-container">
-            <div className="dashboard-header-container">
-                <div className="account-container">
-                    <div onClick={handleSwitchAccount} className="change-account">
-                        Switch Account
-                    </div>
-                    <div className="active-account-title">
-                        <h3>{accountName}</h3>
-                    </div>
-                </div>
-                <div className="dashboard-main-title">
-                    <span className="gold">G</span>XP
-                </div>
-            </div>
             <div className="dashboard-sub-container">
                 <div className="dashboard-graph-main-container">
                     { matchData &&
@@ -267,7 +255,7 @@ const MatchDashboard = () => {
                     }
                 </div>
                 <div className="dashboard-right-sub-container">
-                    <div className="dashboard-legend">
+                    <div className="dashboard-match-context-container">
                         { matchData && 
                             <MatchContext 
                                 matchData={matchData} 

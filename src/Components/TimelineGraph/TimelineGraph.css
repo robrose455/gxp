@@ -1,7 +1,6 @@
 .dashboard-graph-main-container {
     background-color: #333333;
-
-    width: 65%;
+    width: 80%;
     margin: 20px;
     display: flex;
     align-items: center;
