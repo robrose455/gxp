@@ -19,15 +19,15 @@ const SideNav = () => {
     }
 
     const handleMatchesClick = () => {
-        navigate('/');
+        navigate('/match-history');
     }
 
     const handleTrendsClick = () => {
-        navigate('/');
+        navigate('/trends');
     }
 
     const handleBreakdownClick = () => {
-        navigate('/');
+        navigate('/breakdown');
     }
 
   return (
@@ -40,17 +40,17 @@ const SideNav = () => {
         <div className="nav-link-container">
             <div onClick={handleAccountClick} className="nav-link-item">
                 <AccountCircleIcon />
-                Account
+                Summoner
             </div>
-            <div onClick={handleAccountClick} className="nav-link-item">
+            <div onClick={handleMatchesClick} className="nav-link-item">
                 <BarChartIcon />
                 Matches
             </div>
-            <div onClick={handleAccountClick} className="nav-link-item">
+            <div onClick={handleTrendsClick} className="nav-link-item">
                 <TrendingUpIcon />
                 Trends
             </div>
-            <div onClick={handleAccountClick} className="nav-link-item">
+            <div onClick={handleBreakdownClick} className="nav-link-item">
                 <LayersIcon />
                 Breakdown
             </div>
