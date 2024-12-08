@@ -5,7 +5,8 @@ export const MARKERS = ['Baron', 'Death', 'Kill'];
 export enum Metric {
     XP = 'xp',
     GOLD = "gold",
-    CS = 'cs'
+    CS = 'cs',
+    LEVEL = 'level'
 }
 
 export enum Mode {

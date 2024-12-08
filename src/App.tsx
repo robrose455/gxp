@@ -2,18 +2,13 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import HomePage from './Pages/HomePage';
 import MatchDashboard from './Pages/MatchDashboard';
-import { BrowserRouter, Route, Router, Routes } from 'react-router-dom';
-import SideNav from './Components/SideNav/SideNav';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 function App() {
-
-
-  
 
   return (
     <BrowserRouter>
       <div className="App">
-        <SideNav/>
         <Routes>
           <Route
             path="/"

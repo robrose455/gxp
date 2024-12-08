@@ -2,6 +2,9 @@
     background-color: #1E1E1E;
     width: 10%;
     color: #E0E0E0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .logo {
@@ -10,16 +13,49 @@
     font-weight: bold;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    cursor: pointer;
+}
+
+.logo-container {
+    display: flex
 }
 
 .nav-link-container {
-    height: 100%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .nav-link-item {
     font-size: 16px;
     font-weight: bold;
-    padding: 10px;
-    margin: 20px;
+    padding-top: 20px;
+    padding-left: 20px;
+    padding-bottom: 20px;
+    display: flex;
+    align-items: center; /* Vertically align the icon and text */
+    gap: 8px; /* Space between the icon and text */
+    cursor: pointer; /* Show pointer cursor on hover */ /* Optional: Add padding inside each item */
+    width: calc(100% - 20px); /* Adjust width to account for padding */
+    transition: background-color 0.2s ease; /* Smooth hover effect */
+}
+
+.nav-link-item:hover {
+    background-color: #495057; /* Change background on hover */
+  }
+  
+  .nav-link-item svg {
+    font-size: 20px; /* Size of the icons */
+    color: goldenrod; /* Icon color */
+  }
+
+.side-nav-footer {
+    text-align: center; /* Center the text */
+    font-size: 14px; /* Adjust font size */
+    color: #555; /* Text color */
+    padding: 10px 0; /* Add padding */
+    border-top: 1px solid #555; /* Optional: Divider line */
+    margin-top: auto; /* Push the footer to the bottom */
 }

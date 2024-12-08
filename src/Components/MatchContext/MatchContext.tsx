@@ -3,7 +3,6 @@ import './MatchContext.css';
 import ChampionImage from '../ChampionImage/ChampionImage';
 import { MARKERS, Metric, Mode, ROLES } from '../../constants';
 import { ActivePlayer, MatchData, Participant } from '../../types';
-import RoleImage from '../RoleImage/RoleImage';
 
  type DisplayRole = {
     role: string,
@@ -93,17 +92,22 @@ const MatchContext: React.FC<MatchContextProps> = ({
         }
     }, [activeRoles])
 
-    const handleMetricClick = (metric: Metric) => {
+    const handleMetricClick = (metric: Metric, multiselect: boolean = false) => {
 
        if (metric) {
-            let activeMetricsBuffer = [...activeMetrics]
-            if (activeMetricsBuffer.includes(metric)) {
-                activeMetricsBuffer = activeMetricsBuffer.filter((m) => m !== metric);
-            } else {
-                activeMetricsBuffer.push(metric);
-            }
 
-            setActiveMetrics(activeMetricsBuffer);
+            if (multiselect) {
+                let activeMetricsBuffer = [...activeMetrics]
+                if (activeMetricsBuffer.includes(metric)) {
+                    activeMetricsBuffer = activeMetricsBuffer.filter((m) => m !== metric);
+                } else {
+                    activeMetricsBuffer.push(metric);
+                }
+
+                setActiveMetrics(activeMetricsBuffer);
+            } else {
+                setActiveMetrics([metric])
+            }
        }
 
     }
@@ -115,13 +119,8 @@ const MatchContext: React.FC<MatchContextProps> = ({
         }
     }
 
-    const handleRoleClick = (displayRole: DisplayRole) => {
-
-        if (activeRoles.length === 1 && activeRoles[0] === displayRole.role) {
-            
-        } else {
-            updateActiveRoleAndPlayers(displayRole);
-        }
+    const handleRoleClick = (displayRole: DisplayRole, multiselect: boolean = false) => {
+        updateActiveRoleAndPlayers(displayRole, multiselect);
     }
 
     const handleTeamClick = () => {
@@ -179,7 +178,7 @@ const MatchContext: React.FC<MatchContextProps> = ({
 
     }
 
-    const updateActiveRoleAndPlayers = (displayRole?: DisplayRole) => {
+    const updateActiveRoleAndPlayers = (displayRole?: DisplayRole, multiselect: boolean = false) => {
 
         if (displayRole && displayRole.role) {
 
@@ -190,7 +189,11 @@ const MatchContext: React.FC<MatchContextProps> = ({
             if (activeRolesBuffer.includes(newRole)) {
                 activeRolesBuffer = activeRolesBuffer.filter((role: string) => role !== newRole);
             } else {
-                activeRolesBuffer.push(newRole)
+                if (multiselect) {
+                    activeRolesBuffer.push(newRole)
+                } else {
+                    activeRolesBuffer = [newRole];
+                }
             }
 
             setActiveRoles(activeRolesBuffer);
@@ -206,14 +209,18 @@ const MatchContext: React.FC<MatchContextProps> = ({
                 activeAllyPlayersBuffer = activeAllyPlayersBuffer.filter((player: ActivePlayer) => player.champion !== newActiveAllyPlayer.champion)
                 
             } else {
-                activeAllyPlayersBuffer.push(newActiveAllyPlayer);
+                if (multiselect) {
+                    activeAllyPlayersBuffer.push(newActiveAllyPlayer); 
+                } else {
+                    activeAllyPlayersBuffer = [newActiveAllyPlayer];
+                }
             }
 
             setActiveAllyPlayers(activeAllyPlayersBuffer);
         }
 
         if (displayRole && displayRole.enemyChampion) {
-           
+            
             let activeEnemyPlayersBuffer = [...activeEnemyPlayers];
 
             const newActiveEnemyPlayer = matchData.participants.find((participant: Participant) => participant.champion === displayRole.enemyChampion ) as ActivePlayer;
@@ -221,7 +228,11 @@ const MatchContext: React.FC<MatchContextProps> = ({
             if (activeEnemyPlayersBuffer.find((player: ActivePlayer) => player.champion === newActiveEnemyPlayer.champion)) {
                 activeEnemyPlayersBuffer = activeEnemyPlayersBuffer.filter((player: ActivePlayer) => player.champion !== newActiveEnemyPlayer.champion)
             } else {
-                activeEnemyPlayersBuffer.push(newActiveEnemyPlayer);
+                if (multiselect) {
+                    activeEnemyPlayersBuffer.push(newActiveEnemyPlayer);
+                } else {
+                    activeEnemyPlayersBuffer = [newActiveEnemyPlayer];
+                }
             }
 
             setActiveEnemyPlayers(activeEnemyPlayersBuffer)
@@ -236,23 +247,35 @@ const MatchContext: React.FC<MatchContextProps> = ({
                     <div className="graph-config-sub-container">
                         <h3 className="graph-config-title">Metric</h3>
                         <div className="graph-config-content-container">
-                            <div 
-                                onClick={() => handleMetricClick(Metric.GOLD)}
-                                className={`graph-config-item ${(activeMetrics.includes(Metric.GOLD)) ? 'active' : ''}`}
-                            >
-                                Gold
-                            </div>
-                            <div 
-                                onClick={() => handleMetricClick(Metric.XP)}
-                                className={`graph-config-item ${(activeMetrics.includes(Metric.XP)) ? 'active' : ''}`}
-                            >
-                                XP
-                            </div>
-                            <div 
-                                onClick={() => handleMetricClick(Metric.CS)}
-                                className={`graph-config-item ${(activeMetrics.includes(Metric.CS)) ? 'active' : ''}`}
-                            >
-                                CS
+                            <div className="graph-config-grid">
+                                <div className="graph-config-content-container">
+                                    <div 
+                                        onClick={() => handleMetricClick(Metric.GOLD)}
+                                        className={`graph-config-item ${(activeMetrics.includes(Metric.GOLD)) ? 'active' : ''}`}
+                                    >
+                                        Gold
+                                    </div>
+                                    <div 
+                                        onClick={() => handleMetricClick(Metric.XP)}
+                                        className={`graph-config-item ${(activeMetrics.includes(Metric.XP)) ? 'active' : ''}`}
+                                    >
+                                        XP
+                                    </div>
+                                </div>
+                                <div className="graph-config-content-container">
+                                    <div 
+                                        onClick={() => handleMetricClick(Metric.CS)}
+                                        className={`graph-config-item ${(activeMetrics.includes(Metric.CS)) ? 'active' : ''}`}
+                                    >
+                                        CS
+                                    </div>
+                                    <div 
+                                        onClick={() => handleMetricClick(Metric.LEVEL)}
+                                        className={`graph-config-item ${(activeMetrics.includes(Metric.LEVEL)) ? 'active' : ''}`}
+                                    >
+                                        Level
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -269,16 +292,10 @@ const MatchContext: React.FC<MatchContextProps> = ({
                                 onClick={() => handleModeClick(Mode.GROWTH)}
                                 className={`graph-config-item ${(activeMode === Mode.GROWTH) ? 'active' : ''}`}
                             >
-                                Growth Rate
+                                Growth
                             </div>
                         </div>
                     </div>
-                </div>
-                <h3 className="graph-config-title">Events</h3>
-                <div className="graph-marker-list">
-                    { MARKERS.map((marker) => (
-                        <div onClick={() => handleMarkerClick(marker)} className={`graph-config-item ${activeMarkers.includes(marker) ? 'active' : ''}`}>{marker}</div>
-                    ))}
                 </div>
             </div>
             <div className="match-context-bottom-container">

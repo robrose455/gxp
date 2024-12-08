@@ -96,10 +96,10 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
 
         switch (activeMode) {
             case Mode.GROWTH:
-                setDisplayMode('Growth Rate');
+                setDisplayMode('Growth');
                 break;
             case Mode.ADVANTAGE:
-                setDisplayMode('Advantage Percentage');
+                setDisplayMode('Advantage');
                 break;   
         }
 
@@ -423,7 +423,7 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
                         if (value > 0) {
                             sign = "+"
                         }
-                        return ` ${toTitleCase(context.dataset.label)}: ${sign}${value.toFixed(0)}%`
+                        return ` ${toTitleCase(context.dataset.label)}: ${sign}${value.toFixed(1)}`
                     },
                     title: function(context: any) {
                         return `${context[0].label} Minutes`
@@ -439,6 +439,15 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
                 ticks: {
                     color: '#E0E0E0', 
                 },
+                title: {
+                    display: true,
+                    text: 'Game Time (Minutes)',
+                    font: {
+                        size: 16,
+                    },
+                    padding: 10,
+                    color: '#E0E0E0'
+                }
             },
             y: {
                 grid: {
@@ -448,7 +457,16 @@ const TimelineGraph: React.FC<TimelineGraphProps> = ({
                     color: '#E0E0E0', 
                 },
                 suggestedMin: graphYMin,
-                suggestedMax: graphYMax
+                suggestedMax: graphYMax,
+                title: {
+                    display: true,
+                    text: '',
+                    font: {
+                        size: 16
+                    },
+                    padding: 15,
+                    color: '#E0E0E0'
+                }
             },
         },
     }

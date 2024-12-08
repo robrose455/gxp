@@ -6,6 +6,8 @@ import { getMatchData, getMatchPreview } from '../riot.api';
 import { MatchData, Event, Data, MatchPreview, ActivePlayer, Dataset } from '../types';
 import './MatchDashboard.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getLevelFromXp } from '../xp-util';
+import SideNav from '../Components/SideNav/SideNav';
 
 const MatchDashboard = () => {
 
@@ -26,7 +28,7 @@ const MatchDashboard = () => {
     const [activeEnemyPlayers, setActiveEnemyPlayers] = useState<ActivePlayer[]>([]);
     const [activeRoles, setActiveRoles] = useState<string[]>([]);
     const [activeMarkers, setActiveMarkers] = useState<string[]>([]);
-    const [activeMetrics, setActiveMetrics] = useState<Metric[]>([Metric.GOLD, Metric.XP]);
+    const [activeMetrics, setActiveMetrics] = useState<Metric[]>([Metric.GOLD]);
     
     const [activeMode, setActiveMode] = useState<Mode>(Mode.ADVANTAGE);
 
@@ -35,10 +37,6 @@ const MatchDashboard = () => {
 
     // Events
     const [activeEvents, setActiveEvents] = useState<Event[]>([]);
-
-    const handleSwitchAccount = () => {
-        navigate('/')
-    }
 
     const fetchMatchData = async () => {
 
@@ -97,41 +95,54 @@ const MatchDashboard = () => {
 
         if (
             matchData && 
-            activeAllyPlayers && activeAllyPlayers.length > 0 && 
-            activeEnemyPlayers && activeEnemyPlayers.length > 0
+            activeAllyPlayers && 
+            activeEnemyPlayers
         ) {
 
-            const datasets = matchData.data;
+            if (activeAllyPlayers.length <= 0 || activeEnemyPlayers.length <= 0) {
+                setActiveDatasets([]);
+            } else {
 
-            const allyDatasets: Data[] = datasets.filter((dataset: Data) => activeAllyPlayers.some((ally: ActivePlayer) => ally.id === dataset.id));
+                const datasets = matchData.data;
 
-            const enemyDatasets: Data[] = datasets.filter((dataset: Data) => activeEnemyPlayers.some((enemy: ActivePlayer) => enemy.id === dataset.id));
-
-            let activeDatasets: Dataset[] = [];
-
-            for (const metric of activeMetrics) {
-                
-                const allyMetricDatasets: number[][] = allyDatasets.map((dataset) => {
-                    return dataset[metric];
-                })
-
-                const enemyMetricDatasets: number[][] = enemyDatasets.map((dataset) => {
-                    return dataset[metric];
-                })
-
-                const computedDataset: Dataset = {
-                    metric,
-                    mode: activeMode,
-                    data: computeMetricData(allyMetricDatasets, enemyMetricDatasets, metric),
-                    display: getDisplayForMetric(metric)
+                const allyDatasets: Data[] = datasets.filter((dataset: Data) => activeAllyPlayers.some((ally: ActivePlayer) => ally.id === dataset.id));
+    
+                const enemyDatasets: Data[] = datasets.filter((dataset: Data) => activeEnemyPlayers.some((enemy: ActivePlayer) => enemy.id === dataset.id));
+    
+                let activeDatasets: Dataset[] = [];
+    
+                for (const metric of activeMetrics) {
+    
+                    let metricGroup: Metric;
+    
+                    if (metric === Metric.LEVEL) {
+                        metricGroup = Metric.XP;
+                    } else {
+                        metricGroup = metric;
+                    }
+                    
+                    const allyMetricDatasets: number[][] = allyDatasets.map((dataset) => {
+                        return dataset[metricGroup];
+                    })
+    
+                    const enemyMetricDatasets: number[][] = enemyDatasets.map((dataset) => {
+                        return dataset[metricGroup];
+                    })
+    
+                    const computedDataset: Dataset = {
+                        metric,
+                        mode: activeMode,
+                        data: computeMetricData(allyMetricDatasets, enemyMetricDatasets, metric),
+                        display: getDisplayForMetric(metric)
+                    }
+    
+                    activeDatasets.push(computedDataset);
+    
                 }
-
-                activeDatasets.push(computedDataset);
-
+    
+                setActiveDatasets(activeDatasets);
+    
             }
-
-            setActiveDatasets(activeDatasets);
-
         }
         
     }, [activeAllyPlayers, activeEnemyPlayers, activeMetrics, activeMode])
@@ -165,27 +176,53 @@ const MatchDashboard = () => {
                 aggregatedEnemyDataset.push(aggregatedDatapoint);
             }
 
-            // TODO: Reinstate Max Frame Min Frame
-            for (let i = 0; i <= allyDatasets[0].length; i++) {
+            // Condense XP Values into Level difference
+            if (metric === Metric.LEVEL) {
+                aggregatedAllyDataset = aggregatedAllyDataset.map((datapoint, index) => {
+                    console.log("Minute: ", index);
+                    return getLevelFromXp(datapoint, allyDatasets.length);
+                })
 
+                aggregatedEnemyDataset = aggregatedEnemyDataset.map((datapoint, index) => {
+                    console.log("Minute: ", index);
+                    return getLevelFromXp(datapoint, enemyDatasets.length);
+                })
+            }
+
+            const step = 1;
+
+            // TODO: Reinstate Max Frame Min Frame
+            for (let i = 0; i <= allyDatasets[0].length; i += step) {
+
+                //console.log('Minute: ', i);
+                //console.log('Ally Raw Value: ', aggregatedAllyDataset[i])
+                //console.log('Ally Raw Next: ', aggregatedAllyDataset[i + 1]);
+                //console.log('Enemy Raw Value: ', aggregatedEnemyDataset[i]);
+                //console.log('Enemy Raw Next: ', aggregatedEnemyDataset[i + 1]);
                 let computedMetricDataPoint = 0;
 
                 if (activeMode === Mode.GROWTH) {
-                    if (aggregatedAllyDataset[i] === 0 || aggregatedEnemyDataset[i + 1] === 0) {
+                    if (aggregatedAllyDataset[i] === 0 || aggregatedEnemyDataset[i + 1] === 0 || i < 2) {
+                        //console.log('Zeroing out')
                         computedMetricDataPoint = 0;
+                        //console.log('Final GR: ', computedMetricDataPoint);
                     } else {
-                        const allyGrowthRate = ((aggregatedAllyDataset[i + 1] - aggregatedAllyDataset[i]));
-                        const enemyGrowthRate = ((aggregatedEnemyDataset[i + 1] - aggregatedEnemyDataset[i])); 
+                        const allyGrowthRate = ((aggregatedAllyDataset[i + step] - aggregatedAllyDataset[i]));
+                        const enemyGrowthRate = ((aggregatedEnemyDataset[i + step] - aggregatedEnemyDataset[i])); 
+                        //console.log("Ally GR: ", allyGrowthRate);
+                        //console.log('Enemy GR: ', enemyGrowthRate);
                         computedMetricDataPoint = allyGrowthRate - enemyGrowthRate; // Difference in growth rate percentage
+                        //console.log('Final GR: ', computedMetricDataPoint);
                     }
                 }
 
                 if (activeMode === Mode.ADVANTAGE) {
 
-                    if (aggregatedEnemyDataset[i] === 0) {
+                    if (aggregatedEnemyDataset[i] === 0 || i < 3) {
                         computedMetricDataPoint = 0;
                     } else {
-                        computedMetricDataPoint = (((aggregatedAllyDataset[i] - aggregatedEnemyDataset[i])) / aggregatedEnemyDataset[i]) * 100;
+                        // computedMetricDataPoint = (((aggregatedAllyDataset[i] - aggregatedEnemyDataset[i])) / aggregatedEnemyDataset[i]) * 100;
+                        computedMetricDataPoint = aggregatedAllyDataset[i] - aggregatedEnemyDataset[i];
                     }
                 }
 
@@ -230,6 +267,16 @@ const MatchDashboard = () => {
             }
         }
 
+        if (metric === Metric.LEVEL) {
+            return {
+                title: 'Level',
+                theme: {
+                    borderColor: '#28A745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)'
+                }
+            }
+        }
+
         return {
             title: 'Data',
             theme: {
@@ -241,6 +288,7 @@ const MatchDashboard = () => {
 
     return (
         <div className="dashboard-main-container">
+            <SideNav />
             <div className="dashboard-sub-container">
                 <div className="dashboard-graph-main-container">
                     { matchData &&
