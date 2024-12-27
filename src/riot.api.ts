@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { MatchData, MatchPreview } from './types';
+import { exampleData } from './example-match-data';
+import { exampleDataMcnutt } from './report-mcnutt-hundred';
 
 const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:4000' : 'https://gxp-api-277f714413c2.herokuapp.com'
 
@@ -31,4 +33,16 @@ export async function getMatchData(id: string, accountId: string): Promise<Match
     console.error('Error getting match data:', error);
     throw error;
   }
+}
+
+export async function getTrendData(name: string, tag: string, sampleSize: number): Promise<any> {
+   try {
+      // const response = await axios.get(`${BASE_URL}/trends?name=${name}&tag=${tag}&sampleSize=${sampleSize}`)
+      const response = exampleDataMcnutt;
+      console.log(response);
+      return response.data;
+   } catch (error) {
+      console.log('Error getting trend data');
+      throw error;
+   }
 }

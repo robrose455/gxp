@@ -1,0 +1,35 @@
+.trends-main-container {
+    color: white;
+    height: 100%;
+    width: 100%;
+    display: flex;
+}
+
+.trends-sub-container {
+    height: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.trends-dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.trends-header-container {
+    background-color: #1E1E1E;
+    height: 15%;
+    border-radius: 20px;
+    margin: 15px;
+}
+
+.trends-content-container {
+    display: flex;
+    height: 85%;
+    justify-content: space-evenly;
+}

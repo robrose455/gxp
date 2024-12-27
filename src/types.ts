@@ -68,3 +68,13 @@ export type MetricDisplay = {
     title: string;
     theme: any; 
 }
+
+export type TrendContext = {
+    data: any
+    resource: string,
+    role: string,
+}
+
+export type TrendRoleData = {
+
+}

@@ -1,0 +1,12 @@
+.match-history-main-container {
+    color: white;
+    height: 100%;
+    width: 100%;
+    display: flex;
+}
+
+.match-history-sub-container {
+    border: 1px solid blue;
+    height: auto;
+    width: 100%;
+}
