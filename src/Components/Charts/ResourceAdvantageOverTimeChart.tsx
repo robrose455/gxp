@@ -59,6 +59,7 @@ const ResourceAdvantageOverTimeChart:React.FC<ResourceAdvantageOverTimeChartProp
     const [title, setTitle] = useState<string>("Default Title");
     const [rounding, setRounding] = useState<number>(0);
     const [usePercent, setUsePercent] = useState<boolean>(false);
+    const [sampleSize, setSampleSize] = useState<number>(0);
 
     useEffect(() => {
 
@@ -67,14 +68,14 @@ const ResourceAdvantageOverTimeChart:React.FC<ResourceAdvantageOverTimeChartProp
         }
 
         if (config['title']) {
-            setTitle(`Average ${toTitleCase(context['resource'])} ${config['title']}`)
+            setTitle(`Average ${toTitleCase(context['resource'])} ${config['title']} - ${sampleSize} Games`)
         }
 
         if (config['percentage'] !== undefined) {
             setUsePercent(config['percentage'])
         }
 
-    }, [config])
+    }, [config, sampleSize])
 
     const chartData = {
         labels: ['Overall', 'Early (0-14)', 'Mid (14-28)', 'Late (28+)'],
@@ -151,7 +152,8 @@ const ResourceAdvantageOverTimeChart:React.FC<ResourceAdvantageOverTimeChartProp
 
         if (data && data.stats) {
 
-            const stats = data.stats;
+            setSampleSize(data.totalMatches)
+            const stats = data.stats.stats;
 
             setCData({
                 player: [

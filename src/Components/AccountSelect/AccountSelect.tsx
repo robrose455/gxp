@@ -2,40 +2,21 @@ import { Box, TextField, Button } from '@mui/material'
 import React, { useState } from 'react'
 import { Dispatch } from 'react';
 import { SetStateAction } from 'react';
-import { getMatchPreviews } from '../../riot.api';
-import { MatchPreview } from '../../types';
-import { useNavigate } from 'react-router-dom';
 
 interface AccountSelectProps {
-    setMatchPreviews: Dispatch<SetStateAction<MatchPreview[]>>;
-    setLoading: Dispatch<SetStateAction<boolean>>;
-    setAccountId: Dispatch<SetStateAction<string>>;
-    setAccountDisplay: Dispatch<SetStateAction<string>>;
-    error: any;
-    setError: Dispatch<SetStateAction<any>>;
+    setAccountName: Dispatch<SetStateAction<string>>;
+    setAccountTag: Dispatch<SetStateAction<string>>;
 }
 
-const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoading, setAccountId, setAccountDisplay, error, setError }) => {
+const AccountSelect: React.FC<AccountSelectProps> = ({ setAccountName, setAccountTag }) => {
 
-    const [accountName, setAccountName] = useState('');
-    const [accountTag, setAccountTag] = useState('');
+    const [accountNameForm, setAccountNameForm] = useState('');
+    const [accountTagForm, setAccountTagForm] = useState('');
 
     const handleSubmit = async (event: any) => {
-        
         event.preventDefault();
-        setLoading(true);
-
-        try {
-            const matchPreviews = await getMatchPreviews(accountName, accountTag);
-            setAccountDisplay(`${accountName} #${accountTag}`)
-            setAccountId(matchPreviews[0].accountId);
-            setLoading(false);
-            setMatchPreviews(matchPreviews);
-            
-        } catch (error) {
-            setError(true);
-            setLoading(false);
-        }
+        setAccountName(accountNameForm);
+        setAccountTag(accountTagForm);
     };
 
     return (
@@ -55,7 +36,7 @@ const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoad
                 label="Account"
                 variant="outlined"
                 placeholder="T1 Faker"
-                onChange={(e) => setAccountName(e.target.value)}
+                onChange={(e) => setAccountNameForm(e.target.value)}
                 InputProps={{
                     style: { backgroundColor: '#1E1E1E', color: '#E0E0E0' },
                 }}
@@ -70,7 +51,7 @@ const AccountSelect: React.FC<AccountSelectProps> = ({ setMatchPreviews, setLoad
                 label="Tag"
                 variant="outlined"
                 placeholder="NA1"
-                onChange={(e) => setAccountTag(e.target.value)}
+                onChange={(e) => setAccountTagForm(e.target.value)}
                 InputProps={{
                     style: { backgroundColor: '#1E1E1E', color: '#E0E0E0' },
                 }}

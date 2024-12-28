@@ -6,7 +6,21 @@
 }
 
 .match-history-sub-container {
-    border: 1px solid blue;
     height: auto;
+    width: 100%;
+}
+
+.match-history-content-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+    gap: 16px;
+    padding: 16px;
+}
+
+.match-history-loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
     width: 100%;
 }

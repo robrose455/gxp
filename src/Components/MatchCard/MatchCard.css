@@ -1,3 +1,42 @@
 .match-card-main-container {
-    border: 1px solid red;
+    background-color: #1E1E1E;
+    width: 125px;
+    height: 185px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.match-card-main-container:hover {
+    background-color: #555;
+    cursor: pointer;
+}
+
+.match-card-player-champion-container {
+    height: 40%;
+    margin: auto;
+}
+
+.match-card-player-champion-image {
+    height: 100%;
+    width: 100%;
+}
+
+.match-card-enemy-champion-container {
+
+    height: 25%;
+    margin: auto;
+}
+
+.match-card-enemy-champion-image {
+    height: 100%;
+    width: 100%;
+}
+
+.win {
+    border: 3px solid #4CAFEB
+}
+
+.loss {
+    border: 3px solid #FF4C4C
 }

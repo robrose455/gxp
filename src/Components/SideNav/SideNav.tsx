@@ -1,33 +1,32 @@
-import React from 'react'
 import './SideNav.css'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import BarChartIcon from '@mui/icons-material/BarChart';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import LayersIcon from '@mui/icons-material/Layers';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const SideNav = () => {
 
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const pathName = location.pathname;
+
+    const [searchParams] = useSearchParams();
+
+    // Query Parameters
+    const accountName = searchParams.get('name') || "";
+    const accountTag = searchParams.get('tag') || "";
+    const sampleSize = searchParams.get('sampleSize') || 10;
 
     const handleLogoClick = () => {
         navigate(`/`);
     }
 
-    const handleAccountClick = () => {
-        navigate('/');
-    }
-
     const handleMatchesClick = () => {
-        navigate('/match-history');
+        navigate(`/match-history?name=${accountName}&tag=${accountTag}`);
     }
 
     const handleTrendsClick = () => {
-        navigate('/trends');
-    }
-
-    const handleBreakdownClick = () => {
-        navigate('/breakdown');
+        navigate(`/trends?name=${accountName}&tag=${accountTag}&sampleSize=${sampleSize}`);
     }
 
   return (
@@ -38,21 +37,13 @@ const SideNav = () => {
             </div>
         </div>
         <div className="nav-link-container">
-            <div onClick={handleAccountClick} className="nav-link-item">
-                <AccountCircleIcon />
-                Summoner
-            </div>
-            <div onClick={handleMatchesClick} className="nav-link-item">
+            <div onClick={handleMatchesClick} className={`nav-link-item ${pathName === 'dashboard' ? 'active' : ''}`}>
                 <BarChartIcon />
                 Matches
             </div>
-            <div onClick={handleTrendsClick} className="nav-link-item">
+            <div onClick={handleTrendsClick} className={`nav-link-item ${pathName === '/trends' ? 'active' : ''}`}>
                 <TrendingUpIcon />
                 Trends
-            </div>
-            <div onClick={handleBreakdownClick} className="nav-link-item">
-                <LayersIcon />
-                Breakdown
             </div>
         </div>
         <div className="side-nav-footer">

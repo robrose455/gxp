@@ -16,8 +16,8 @@ const MatchDashboard = () => {
     const [searchParams] = useSearchParams();
 
     // Query Parameters
-    const accountId = searchParams.get('accountId') || "";
-    const accountName = searchParams.get('accountName') || "";
+    const name = searchParams.get('name') || "";
+    const tag = searchParams.get('tag') || "";
     const matchId = searchParams.get('matchId') || "";
 
     const [matchPreviewData, setMatchPreviewData] = useState<MatchPreview>({} as MatchPreview);
@@ -40,8 +40,8 @@ const MatchDashboard = () => {
 
     const fetchMatchData = async () => {
 
-        const mpd = await getMatchPreview(matchId, accountId);
-        const matchData = await getMatchData(matchId, accountId);
+        const mpd = await getMatchPreview(matchId, name, tag);
+        const matchData = await getMatchData(matchId, name, tag);
 
         if (matchData && matchData.events) {
             const events = matchData.events;
@@ -53,11 +53,11 @@ const MatchDashboard = () => {
 
     useEffect(() => {
 
-        if (matchId && accountId) {
+        if (matchId && name && tag) {
             fetchMatchData();
         }
         
-    }, [matchId, accountId])
+    }, [matchId, name, tag])
 
 
     useEffect(() => {

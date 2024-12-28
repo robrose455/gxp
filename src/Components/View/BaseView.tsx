@@ -11,7 +11,7 @@ interface BaseViewProps {
 
 const BaseView: React.FC<BaseViewProps> = ({ id, context, children }) => {
 
-    const [viewData, setViewData] = useState<any[]>([])
+    const [viewData, setViewData] = useState<any>()
 
     // Populate View Data
     useEffect(() => {
@@ -22,9 +22,13 @@ const BaseView: React.FC<BaseViewProps> = ({ id, context, children }) => {
             const data = context.data;
             const roleData = data[currentRole];
             const statGroups = roleData['stats'];
+            const numOfMatches = roleData['totalMatches']
             const activeStatGroup = statGroups.find((sg: any) => sg.id === id);
            
-            setViewData(activeStatGroup);
+            setViewData({
+                totalMatches: numOfMatches,
+                stats: activeStatGroup
+            });
 
         }
 

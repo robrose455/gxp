@@ -15,9 +15,9 @@ export async function getMatchPreviews(name: string, tag: string): Promise<Match
   }
 }
 
-export async function getMatchPreview(matchId: string, accountId: string): Promise<MatchPreview> {
+export async function getMatchPreview(matchId: string, name: string, tag: string): Promise<MatchPreview> {
   try {
-  const response = await axios.get(`${BASE_URL}/matchPreview?matchId=${matchId}&accountId=${accountId}`);
+  const response = await axios.get(`${BASE_URL}/matchPreview?matchId=${matchId}&name=${name}&tag=${tag}`);
   return response.data;
 } catch (error) {
   console.error('Error getting match preview data:', error);
@@ -25,9 +25,9 @@ export async function getMatchPreview(matchId: string, accountId: string): Promi
 }
 }
 
-export async function getMatchData(id: string, accountId: string): Promise<MatchData> {
+export async function getMatchData(id: string, name: string, tag: string): Promise<MatchData> {
   try {
-    const response = await axios.get(`${BASE_URL}/match?id=${id}&accountId=${accountId}`);
+    const response = await axios.get(`${BASE_URL}/match?id=${id}&name=${name}&tag=${tag}`);
     return response.data;
   } catch (error) {
     console.error('Error getting match data:', error);
